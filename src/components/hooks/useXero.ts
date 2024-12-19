@@ -6,6 +6,8 @@ import { useEffect, useCallback, useRef } from "react";
 
 interface XeroCredentials {
   accessToken: string | undefined;
+  clientId: string | undefined;
+  clientSecret: string | undefined;
   refreshToken: string | undefined;
   tenantId: string | undefined;
 }
@@ -50,17 +52,23 @@ export const useXero = (): UseXeroReturn => {
       Cookies.withAttributes({ domain: domain, path: path });
 
       const accessToken = Cookies.get("xeroAccessToken");
+      const clientId = Cookies.get("xeroClientId");
+      const clientSecret = Cookies.get("xeroClientSecret");
       const refreshToken = Cookies.get("xeroRefreshToken");
       const tenantId = Cookies.get("xeroTenantId");
 
       console.log({
         accessToken,
+        clientId,
+        clientSecret,
         refreshToken,
         tenantId,
       });
 
       return {
         accessToken,
+        clientId,
+        clientSecret,
         refreshToken,
         tenantId,
       };
