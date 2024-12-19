@@ -2,7 +2,7 @@ import Cookies from "js-cookie";
 
 import { backendURL, domain, path } from "../config";
 import { useAuth } from "../auth/AuthContext";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 
 interface XeroCredentials {
   accessToken: string | undefined;
@@ -19,13 +19,14 @@ interface UseXeroReturn {
 
 export const useXero = (): UseXeroReturn => {
   const { isAuthenticated, loading, checkAuthStatus } = useAuth();
+  const popupRef = useRef<Window | null>(null);
 
   const connectXero = async () => {
     const windowFeatures =
       "width=600,height=600,resizable=yes,scrollbars=yes,status=yes";
 
     try {
-      const popup = window.open(
+      popupRef.current = window.open(
         `${backendURL}/connect`,
         "Xero Authentication",
         windowFeatures
@@ -33,7 +34,7 @@ export const useXero = (): UseXeroReturn => {
 
       // Poll for popup closure
       const pollTimer = setInterval(() => {
-        if (popup?.closed) {
+        if (popupRef.current?.closed) {
           clearInterval(pollTimer);
           checkAuthStatus();
         }
@@ -46,7 +47,6 @@ export const useXero = (): UseXeroReturn => {
 
   const getAccounts = useCallback(async (): Promise<XeroCredentials> => {
     try {
-      // Configure Cookies to work with your domain
       Cookies.withAttributes({ domain: domain, path: path });
 
       const accessToken = Cookies.get("xeroAccessToken");
@@ -74,6 +74,10 @@ export const useXero = (): UseXeroReturn => {
     const handleMessage = (event: MessageEvent) => {
       if (event.origin === backendURL) {
         if (event.data.type === "XERO_AUTH_SUCCESS") {
+          // Close the popup window after successful authentication
+          if (popupRef.current && !popupRef.current.closed) {
+            popupRef.current.close();
+          }
           checkAuthStatus();
         }
       }
